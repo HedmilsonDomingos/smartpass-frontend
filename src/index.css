@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Primary colour used in the design */
+:root {
+  --primary: #3b82f6;
+}
+.bg-primary { background-color: var(--primary); }
+.text-primary { color: var(--primary); }
