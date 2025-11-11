@@ -3,7 +3,6 @@
 // Dados reais da nuvem + datas bonitas com JavaScript puro
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useNavigate, Link } from "react-router-dom"; // IMPORTEI O Link AQUI!!!
 
 export default function Dashboard() {
