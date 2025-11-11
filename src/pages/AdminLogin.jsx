@@ -133,11 +133,15 @@ export default function AdminLogin() {
                       </div>
                     </label>
 
-                    {/* Link esqueci senha (opcional no futuro) */}
+                    {/* Esqueci a senha — corrigido para passar no build do Vercel */}
                     <div className="flex items-center justify-between">
-                      <a href="#" className="text-sm font-medium text-primary hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => alert("Funcionalidade em desenvolvimento\nContacta o administrador:\n+244 923 456 789")}
+                        className="text-sm font-medium text-primary hover:underline focus:outline-none transition"
+                      >
                         Forgot Password?
-                      </a>
+                      </button>
                     </div>
 
                     {/* Botão de Login */}
@@ -154,7 +158,7 @@ export default function AdminLogin() {
                     {/* Rodapé */}
                     <div className="pt-12 text-center">
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        © 2025 SmartPass Angola. Feito com orgulho em Luanda.
+                        © 2025 SmartPass Angola. Feito com orgulho em Luanda. Hem Quick Tech Solution, Lda.
                       </p>
                     </div>
                   </form>
