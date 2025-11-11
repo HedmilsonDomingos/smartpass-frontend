@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/ui/Sidebar.jsx';
 import Button from '../components/ui/Button.jsx';
+import { API_URL } from '../config';
 
 // List all employees in a table
 export default function AllEmployees() {
@@ -9,7 +10,7 @@ export default function AllEmployees() {
 
   // Load employees from backend
   useEffect(() => {
-    fetch('http://localhost:3000/api/employees', {
+    fetch(`${API_URL}/employees`, {
       headers: { Authorization: localStorage.getItem('token') }
     })
     .then(res => res.json())
