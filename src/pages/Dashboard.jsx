@@ -132,7 +132,7 @@ export default function Dashboard() {
                   <p className="text-3xl font-bold tracking-tight text-[#111318] dark:text-white">Admin Dashboard</p>
                   <p className="text-base text-[#616f89] dark:text-gray-400">Bem-vindo de volta, chefe. Aqui está o resumo de hoje.</p>
                 </div>
-                <button onClick={() => navigate("/add-employee")} className="flex items-center gap-2 h-10 px-6 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition">
+                <button onClick={() => navigate("/AddEmployee")} className="flex items-center gap-2 h-10 px-6 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition">
                   <span className="material-symbols-outlined">add</span>
                   Adicionar Funcionário
                 </button>
