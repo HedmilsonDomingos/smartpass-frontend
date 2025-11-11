@@ -85,7 +85,7 @@ export default function AdminLogin() {
 
                   <div>
                     <h1 className="text-text-light dark:text-text-dark tracking-tight text-3xl font-bold leading-tight text-left">
-                      Admin Log In
+                      Login do Administrador
                     </h1>
                   </div>
 
@@ -95,7 +95,7 @@ export default function AdminLogin() {
                     {/* Campo Usuário */}
                     <label className="flex flex-col w-full">
                       <p className="text-text-light dark:text-text-dark text-sm font-medium leading-normal pb-2">
-                        Username
+                        Usuário
                       </p>
                       <input
                         type="text"
@@ -110,7 +110,7 @@ export default function AdminLogin() {
                     {/* Campo Senha com botão de mostrar/esconder */}
                     <label className="flex flex-col w-full">
                       <p className="text-text-light dark:text-text-dark text-sm font-medium leading-normal pb-2">
-                        Password
+                        Senha
                       </p>
                       <div className="flex w-full flex-1 items-stretch rounded-lg">
                         <input
