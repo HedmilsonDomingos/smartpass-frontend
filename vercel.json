@@ -6,7 +6,7 @@
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build",
-        "installCommand": "npm install",
+        "installCommand": "npm ci",
         "buildCommand": "npx react-scripts build"
       }
     }
