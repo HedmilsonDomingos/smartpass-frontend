@@ -98,7 +98,7 @@ const AllEmployees = () => {
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div className="flex min-w-72 flex-col gap-2">
           <p className="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">
-            Employee Management
+            Funcionários
           </p>
           <p className="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
             Manage employee QR codes and public information pages.
