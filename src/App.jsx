@@ -9,8 +9,13 @@ import EditEmployee from "./pages/EditEmployee.jsx";
 import EmployeeDetails from "./pages/EmployeeDetails.jsx";
 import PublicEmployeePage from "./pages/PublicEmployeePage.jsx";
 import Users from "./pages/Users.jsx";
+import EditUser from "./pages/EditUsers.jsx";
+import AdminProfile from "./pages/AdminProfile.jsx";
+import AddUser from "./pages/AddUser.jsx";
 import Reports from "./pages/Reports.jsx";
+import CustomReports from "./pages/CustomReports.jsx";
 import Settings from "./pages/Settings.jsx";
+import RecentActivityLog from "./pages/RecentActivityLog.jsx";
 
 export default function App() {
   return (
@@ -19,16 +24,20 @@ export default function App() {
         {/* Default route – show login */}
         <Route path="/" element={<AdminLogin />} />
         <Route path="/login" element={<AdminLogin />} />
-
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/AllEmployees" element={<AllEmployees />} />
         <Route path="/AddEmployee" element={<AddEmployee />} />
-        <Route path="/EditEmployee/:id" element={<EditEmployee />} />
-        <Route path="/employee-details/:id" element={<EmployeeDetails />} />
-        <Route path="/public-employee/:id" element={<PublicEmployeePage />} />
+        <Route path="/EditEmployee/:id" element={<EditEmployee />} />      
+        <Route path="/employee-details/:id" element={<EmployeeDetails />} />        
+        <Route path="/p/:slug" element={<PublicEmployeePage />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/EditUser/:id" element={<EditUser />} />
+        <Route path="/Profile" element={<AdminProfile />} />
+        <Route path="/AddUser" element={<AddUser />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/CustomReports" element={<CustomReports />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/activity" element={<RecentActivityLog />} />
       </Routes>
     </Router>
   );

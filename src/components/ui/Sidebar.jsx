@@ -3,12 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 // Navigation menu - appears on all admin pages
 const navItems = [
   { to: "/dashboard", icon: "dashboard", label: "Dashboard" },
-  { to: "/profile", icon: "person", label: "Profile" },
-  { to: "/employees", icon: "group", label: "Employees" },
+  { to: "/Profile", icon: "person", label: "Profile" },
+  { to: "/AllEmployees", icon: "group", label: "Employees" },
   { to: "/users", icon: "manage_accounts", label: "Users" },
-  { to: "/qr-codes", icon: "qr_code_2", label: "QR Codes" },
-  { to: "/activity", icon: "history", label: "Activity log" },
+  { to: "/activity", icon: "history", label: "Activity Log" },
   { to: "/reports", icon: "analytics", label: "Reports" },
+  { to: "/CustomReports", icon: "bar_chart", label: "Custom Reports" },
   { to: "/settings", icon: "settings", label: "Settings" },
 ];
 

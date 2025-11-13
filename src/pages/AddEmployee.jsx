@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
+import Sidebar from '../components/ui/Sidebar.jsx';
 
 export default function AddEmployee() {
   const navigate = useNavigate();
@@ -149,33 +150,9 @@ export default function AddEmployee() {
 
   return (
     <div className="flex h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-      {/* SIDEBAR (mesmo do anterior) */}
-      <aside className="w-64 flex-shrink-0 bg-container-light dark:bg-container-dark border-r border-border-light dark:border-border-dark">
-        <div className="flex h-full flex-col justify-between p-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEL-M8y_K1i8O8EJAZclExmIfeARz4lUbJESgRz2OqesM-mqXjh6eWKrg57kMJmkpLh0GIIxlb5ZZEcD80BrPpNp98zZHTMmpxfHSWF4CEgdI5lcKAT7MyswEBeCOqho5euBc6yVppHNK9mDZ8uQgUqOyXvPP_AfQKhcOKQ2_5vvUt47HEVVRto1K24ncSnpuTNNhAC-tNXKq5-GrpTnbuLlj3-wx00ilHVN9NGo1z-mzqdqtWAi48BX3A719WMl1k_QhHsfHdee-1')" }}></div>
-              <div>
-                <h1 className="font-bold">SmartPass</h1>
-                <p className="text-sm text-subtext-light dark:text-subtext-dark">Admin Panel</p>
-              </div>
-            </div>
+      <Sidebar />
 
-            <nav className="flex flex-col gap-2 mt-4">
-              <a href="/employees" className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-bold">
-                <span className="material-symbols-outlined">group</span>
-                <p>Employees</p>
-              </a>
-            </nav>
-          </div>
-
-          <button onClick={() => { localStorage.removeItem("token"); navigate("/login"); }} className="h-10 rounded-lg bg-primary text-white font-bold">
-            Log Out
-          </button>
-        </div>
-      </aside>
-
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
@@ -242,11 +219,10 @@ export default function AddEmployee() {
                     <option>Consultor</option>
                   </select>
                   <select name="officeLocation" value={form.officeLocation} onChange={handleChange} required className={`w-full h-14 px-5 rounded-xl border ${errors.officeLocation ? "border-red-500" : "border-border-light"} bg-background-light dark:bg-background-dark`}>
-                    <option value="">Localização *</option>
-                    <option>Luanda - Talatona</option>
-                    <option>Luanda - Centro</option>
-                    <option>Viana</option>
-                    <option>Remote</option>
+                    <option value="">Empresa *</option>
+                    <option>Gesglobal</option>
+                    <option>Rikauto</option>
+                    <option>Abricome</option>                    
                   </select>
                 </div>
               </div>

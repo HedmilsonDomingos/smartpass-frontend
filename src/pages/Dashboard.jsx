@@ -3,7 +3,8 @@
 // Dados reais da nuvem + datas bonitas com JavaScript puro
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom"; // IMPORTEI O Link AQUI!!!
+import { useNavigate, Link } from "react-router-dom";
+import Sidebar from "../components/ui/Sidebar.jsx";
 
 export default function Dashboard() {
     // ESTADOS PARA GUARDAR DADOS REAIS DA BASE DE DADOS
@@ -73,43 +74,7 @@ export default function Dashboard() {
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-['Inter']">
       <div className="flex h-full flex-1">
-
-        {/* SIDEBAR */}
-        <aside className="flex w-64 flex-col border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark/50">
-          <div className="flex h-full flex-col justify-between p-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 px-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
-                  <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
-                </div>
-                <div>
-                  <h1 className="text-base font-bold text-[#111318] dark:text-gray-200">SmartPass</h1>
-                  <p className="text-sm text-[#616f89] dark:text-gray-400">Admin Panel</p>
-                </div>
-              </div>
-
-              <nav className="flex flex-col gap-2 pt-4">
-                <a href="/dashboard" className="flex items-center gap-3 rounded-lg bg-primary/10 dark:bg-primary/20 px-3 py-2">
-                  <span className="material-symbols-outlined fill text-primary">dashboard</span>
-                  <p className="text-sm font-medium text-primary">Dashboard</p>
-                </a>
-                <a href="/employees" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/10">
-                  <span className="material-symbols-outlined text-[#111318] dark:text-gray-300">group</span>
-                  <p className="text-sm font-medium text-[#111318] dark:text-gray-300">Funcionários</p>
-                </a>
-                <a href="/qr-codes" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/10">
-                  <span className="material-symbols-outlined text-[#111318] dark:text-gray-300">qr_code_2</span>
-                  <p className="text-sm font-medium text-[#111318] dark:text-gray-300">QR Codes</p>
-                </a>
-              </nav>
-            </div>
-
-            <a href="/" onClick={() => localStorage.removeItem("token")} className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/10">
-              <span className="material-symbols-outlined text-[#111318] dark:text-gray-300">logout</span>
-              <p className="text-sm font-medium text-[#111318] dark:text-gray-300">Sair</p>
-            </a>
-          </div>
-        </aside>
+         <Sidebar />
 
         {/* MAIN CONTENT */}
         <main className="flex flex-1 flex-col">

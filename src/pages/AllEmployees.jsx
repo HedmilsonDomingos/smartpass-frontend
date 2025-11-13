@@ -1,10 +1,7 @@
-// src/pages/Employees.jsx
-import React from 'react';
-import AllEmployees from '../components/AllEmployees'; // Adjust path if needed
+// src/pages/AllEmployees.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import QRCode from 'qrcode.react'; // npm install qrcode.react
-import { MaterialSymbols } from './MaterialSymbols'; // Optional: if you want custom icon component
+import { QRCodeCanvas } from 'qrcode.react'; // npm install qrcode.react
 
 const AllEmployees = () => {
   // STATE MANAGEMENT
@@ -263,7 +260,7 @@ const AllEmployees = () => {
           <div className="bg-white dark:bg-slate-900 rounded-xl p-6 max-w-sm w-full text-center">
             <h3 className="text-lg font-bold mb-4">{showQR.name}'s QR Code</h3>
             <div className="bg-white p-4 rounded-lg inline-block">
-              <QRCode value={`https://smartpass.com/employee/${showQR.employeeId}`} size={200} />
+              <QRCodeCanvas value={`https://smartpass.com/employee/${showQR.employeeId}`} size={200} />
             </div>
             <p className="text-sm text-slate-500 mt-3">Scan to view public profile</p>
             <button

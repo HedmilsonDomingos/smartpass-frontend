@@ -1,5 +1,5 @@
 // src/components/layout/Layout.jsx
-import Sidebar from './Sidebar';
+import Sidebar from '../ui/Sidebar.jsx';
 
 export default function Layout({ children }) {
   return (
