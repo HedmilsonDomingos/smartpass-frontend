@@ -21,9 +21,9 @@ export default function App() {
         <Route path="/login" element={<AdminLogin />} />
 
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/employees" element={<AllEmployees />} />
-        <Route path="/add-employee" element={<AddEmployee />} />
-        <Route path="/edit-employee/:id" element={<EditEmployee />} />
+        <Route path="/AllEmployees" element={<AllEmployees />} />
+        <Route path="/AddEmployee" element={<AddEmployee />} />
+        <Route path="/EditEmployee/:id" element={<EditEmployee />} />
         <Route path="/employee-details/:id" element={<EmployeeDetails />} />
         <Route path="/public-employee/:id" element={<PublicEmployeePage />} />
         <Route path="/users" element={<Users />} />
