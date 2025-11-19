@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "npx react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "vercel-build": "react-scripts vercel",
     "eject": "react-scripts eject"
