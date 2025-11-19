@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+body {
+  color: #4b5563; /* Gray text color for all pages (Tailwind gray-600 equivalent) */
+}
+
 
 /* Primary colour used in the design */
 :root {

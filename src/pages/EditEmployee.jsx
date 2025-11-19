@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/ui/Sidebar.jsx';
+import api from '../lib/api';
+import axios from 'axios';
+import { downloadImageFromDataUrl } from './EditEmployeeQRUtils';
+
+const formatDateForInput = (isoString) => {
+  if (!isoString) return '';
+  try {
+    return new Date(isoString).toISOString().split('T')[0];
+  } catch (e) {
+    return '';
+  }
+};
 
 const EditEmployee = () => {
   const { id } = useParams(); // Get employee ID from URL
@@ -13,14 +23,15 @@ const EditEmployee = () => {
     fullName: '',
     email: '',
     phone: '',
-    mobile: '',
-    jobTitle: '',
+    cargo: '',
+    employeeId: '',
     department: '',
-    category: '',
     company: '',
-    isActive: true,
+    officeLocation: '',
+    status: 'Active',
     profilePic: '',
     qrCode: '',
+    idCardExpiresAt: '', // ID Card expiration date
   });
 
   const [loading, setLoading] = useState(true);
@@ -37,11 +48,24 @@ const EditEmployee = () => {
       }
 
       try {
-        const res = await axios.get(`https://smartpass-api.onrender.com/api/employees/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`/api/employees/${id}`);
 
-        setEmployee(res.data);
+        const backendData = res.data;
+        setEmployee({
+          // Map backend fields to frontend state names
+          fullName: backendData.name || '',
+          email: backendData.email || '',
+          phone: backendData.mobile || '',
+          cargo: backendData.cargo || '',
+          employeeId: backendData.employeeId || '',
+          department: backendData.department || '',
+          company: backendData.company || '',
+          officeLocation: backendData.officeLocation || '',
+          status: backendData.status || 'Active',
+          profilePic: backendData.photo || backendData.profilePic || '', // Assuming backend uses 'photo'
+          qrCode: backendData.qrCode || '',
+          idCardExpiresAt: formatDateForInput(backendData.idCardExpirationDate) || '',
+        });
         setLoading(false);
       } catch (err) {
         setMessage({ text: 'Employee not found.', type: 'error' });
@@ -61,6 +85,14 @@ const EditEmployee = () => {
     }));
   };
 
+  // Toggle status between Active/Inactive
+  const toggleStatus = () => {
+    setEmployee(prev => ({
+      ...prev,
+      status: prev.status === 'Active' ? 'Inactive' : 'Active',
+    }));
+  };
+
   // === HANDLE PROFILE PICTURE UPLOAD ===
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -70,15 +102,9 @@ const EditEmployee = () => {
     formData.append('profilePic', file);
 
     try {
-      const res = await axios.post(
-        `https://smartpass-api.onrender.com/api/employees/${id}/upload-photo`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+      const res = await api.post(
+        `/api/employees/${id}/upload-photo`,
+        formData
       );
 
       setEmployee(prev => ({ ...prev, profilePic: res.data.profilePic }));
@@ -92,10 +118,9 @@ const EditEmployee = () => {
   const regenerateQR = async () => {
     setRegenerating(true);
     try {
-      const res = await axios.post(
-        `https://smartpass-api.onrender.com/api/employees/${id}/regenerate-qr`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.post(
+        `/api/employees/${id}/regenerate-qr`,
+        {}
       );
 
       setEmployee(prev => ({ ...prev, qrCode: res.data.qrCode }));
@@ -111,10 +136,25 @@ const EditEmployee = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(
-        `https://smartpass-api.onrender.com/api/employees/${id}`,
-        employee,
-        { headers: { Authorization: `Bearer ${token}` } }
+      if (!window.confirm("Are you sure you want to save these changes?")) {
+        setSaving(false);
+        return;
+      }
+
+      const { fullName, phone, idCardExpiresAt, ...restOfEmployee } = employee;
+      
+      // Map frontend state names to backend model names
+      const payload = {
+        ...restOfEmployee,
+        mobile: phone, // Map frontend 'phone' to backend 'mobile'
+        name: fullName.trim(),
+        // Send null if the date input is empty, otherwise send the date string
+        idCardExpirationDate: idCardExpiresAt ? idCardExpiresAt : null,
+      };
+
+      await api.put(
+        `/api/employees/${id}`,
+        payload
       );
 
       setMessage({ text: 'Employee updated successfully!', type: 'success' });
@@ -124,31 +164,38 @@ const EditEmployee = () => {
       setSaving(false);
     }
   };
+  // === DOWNLOAD QR CODE ===
+  const downloadQR = () => {
+    if (employee.qrCode) {
+      downloadImageFromDataUrl(employee.qrCode, `qr-${employee.employeeId}.png`);
+    } else {
+      setMessage({ text: 'QR Code not available for download.', type: 'error' });
+    }
+  };
+
 
   if (loading) {
     return <div className="p-12 text-center text-lg">Loading employee...</div>;
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-
+    <div className="flex min-h-screen text-white">
       {/* === MAIN CONTENT === */}
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
 
           {/* Breadcrumb */}
           <div className="flex flex-wrap gap-2 mb-6">
-            <a href="/employees" className="text-[#616f89] hover:underline">All Employees</a>
-            <span className="text-[#616f89]">/</span>
-            <span className="text-[#111318] dark:text-white">Edit Employee</span>
+            <a href="/employees" className="text-gray-400 hover:underline">All Employees</a>
+            <span className="text-gray-400">/</span>
+            <span className="text-white">Edit Employee</span>
           </div>
 
           {/* Title */}
           <div className="flex flex-wrap justify-between gap-3 mb-8">
             <div>
               <p className="text-4xl font-black tracking-tight">Edit Employee: {employee.fullName}</p>
-              <p className="text-[#616f89] mt-2">Update the employee's information and QR code as needed.</p>
+              <p className="text-gray-400 mt-2">Update the employee's information and QR code as needed.</p>
             </div>
           </div>
 
@@ -162,8 +209,8 @@ const EditEmployee = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             {/* LEFT: FORM */}
-            <div className="lg:col-span-2 bg-white dark:bg-background-dark p-6 rounded-xl border border-gray-200 dark:border-gray-800">
-              <h2 className="text-[22px] font-bold pb-5 border-b border-gray-200 dark:border-gray-800">
+            <div className="lg:col-span-2 bg-gray-700 p-6 rounded-xl border border-gray-600">
+              <h2 className="text-[22px] font-bold pb-5 border-b border-gray-600">
                 Employee Information
               </h2>
 
@@ -180,59 +227,68 @@ const EditEmployee = () => {
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                     </label>
                   </div>
-                  <p className="text-sm text-[#616f89]">Profile Picture</p>
+                  <p className="text-sm text-gray-400">Profile Picture</p>
                 </div>
 
-                {/* Form Fields */}
+                {/* Form Fields (consistent with AddEmployee) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1 w-full">
                   <label className="flex flex-col">
                     <p className="text-base font-medium pb-2">Full Name</p>
                     <input name="fullName" value={employee.fullName} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary" />
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
                   </label>
                   <label className="flex flex-col">
                     <p className="text-base font-medium pb-2">Email Address</p>
                     <input name="email" value={employee.email} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary" />
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
                   </label>
                   <label className="flex flex-col">
-                    <p className="text-base font-medium pb-2">Phone Number</p>
+                    <p className="text-base font-medium pb-2">Employee ID</p>
+                    <input name="employeeId" value={employee.employeeId} onChange={handleChange}
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
+                  </label>
+                  <label className="flex flex-col">
+                    <p className="text-base font-medium pb-2">Telefone</p>
                     <input name="phone" value={employee.phone} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary" />
-                  </label>
-                  <label className="flex flex-col">
-                    <p className="text-base font-medium pb-2">Mobile Number</p>
-                    <input name="mobile" value={employee.mobile} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary" />
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
                   </label>
                   <label className="flex flex-col sm:col-span-2">
-                    <p className="text-base font-medium pb-2">Job Title</p>
-                    <input name="jobTitle" value={employee.jobTitle} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary" />
+                    <p className="text-base font-medium pb-2">Cargo</p>
+                    <input name="cargo" value={employee.cargo} onChange={handleChange}
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
                   </label>
                   <label className="flex flex-col">
                     <p className="text-base font-medium pb-2">Department</p>
                     <select name="department" value={employee.department} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary">
-                      <option>Engineering</option>
-                      <option>Marketing</option>
-                      <option>Sales</option>
-                      <option>Human Resources</option>
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary">
+                      <option value="">Departamento *</option>
+                      <option>Direção Geral</option>
+                      <option>Recursos Humanos</option>
+                      <option>Tecnologia</option>
+                      <option>Segurança</option>
+                      <option>Financeiro</option>
+                      <option>Operações</option>
                     </select>
                   </label>
                   <label className="flex flex-col">
-                    <p className="text-base font-medium pb-2">Category</p>
-                    <select name="category" value={employee.category} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary">
-                      <option>Product Manager</option>
-                      <option>Digital Marketing Specialist</option>
-                      <option>Content Creator</option>
+                    <p className="text-base font-medium pb-2">Empresa</p>
+                    <select name="company" value={employee.company} onChange={handleChange}
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary">
+                    <option value="">Empresa *</option>
+                      <option>Gesglobal</option>
+                      <option>Rikauto</option>
+                      <option>Abricome</option>
                     </select>
                   </label>
                   <label className="flex flex-col sm:col-span-2">
-                    <p className="text-base font-medium pb-2">Company</p>
-                    <input name="company" value={employee.company} onChange={handleChange}
-                      className="h-14 px-4 rounded-lg border border-[#dbdfe6] dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-primary" />
+                    <p className="text-base font-medium pb-2">Office Location</p>
+                    <input name="officeLocation" value={employee.officeLocation} onChange={handleChange}
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
+                  </label>
+                  <label className="flex flex-col sm:col-span-2">
+                    <p className="text-base font-medium pb-2">ID Card Expiration Date</p>
+                    <input name="idCardExpiresAt" type="date" value={employee.idCardExpiresAt} onChange={handleChange}
+                      className="h-14 px-4 rounded-lg border border-gray-600 bg-gray-800 text-white focus:border-primary" />
                   </label>
                 </div>
               </div>
@@ -240,36 +296,41 @@ const EditEmployee = () => {
 
             {/* RIGHT: STATUS + QR */}
             <div className="flex flex-col gap-8">
-              {/* Status Toggle */}
-              <div className="bg-white dark:bg-background-dark p-6 rounded-xl border border-gray-200 dark:border-gray-800">
-                <h3 className="text-lg font-bold mb-4">Status</h3>
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-base text-[#616f89]">Employee account is Active</span>
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={employee.isActive}
-                    onChange={handleChange}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                </label>
+              {/* Status Toggle (consistent with AddEmployee) */}
+              <div className="bg-gray-700 p-6 rounded-xl border border-gray-600">
+                <h3 className="text-xl font-bold pb-4 border-b border-gray-600">Estado da Conta</h3>
+                <div className="mt-8 flex items-center gap-6">
+                  <span className={employee.status === "Inactive" ? "text-red-500 font-bold" : "text-gray-500"}>Inativo</span>
+                  <button type="button" onClick={toggleStatus} className={`relative inline-flex h-8 w-14 rounded-full transition ${employee.status === "Active" ? "bg-primary" : "bg-gray-400"}`}>
+                    <span className={`inline-block h-7 w-7 rounded-full bg-white transform transition ${employee.status === "Active" ? "translate-x-7" : "translate-x-0.5"}`} />
+                  </button>
+                  <span className={employee.status === "Active" ? "text-primary font-bold" : "text-gray-500"}>Ativo</span>
+                </div>
               </div>
 
-              {/* QR Code */}
-              <div className="bg-white dark:bg-background-dark p-6 rounded-xl border border-gray-200 dark:border-gray-800 text-center">
+              {/* QR Code (consistent with AddEmployee, with download) */}
+              <div className="bg-gray-700 p-6 rounded-xl border border-gray-600 text-center">
                 <h3 className="text-lg font-bold mb-4">Employee QR Code</h3>
-                <div className="flex justify-center p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <div className="flex justify-center p-4 bg-gray-800 rounded-lg">
                   <img src={employee.qrCode} alt="QR Code" className="w-40 h-40" />
                 </div>
-                <button
-                  onClick={regenerateQR}
-                  disabled={regenerating}
-                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined text-base">refresh</span>
-                  {regenerating ? 'Regenerating...' : 'Regenerate QR Code'}
-                </button>
+                <div className="flex flex-col gap-2 mt-4">
+                  <button
+                    onClick={regenerateQR}
+                    disabled={regenerating}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-base">refresh</span>
+                    {regenerating ? 'Regenerating...' : 'Regenerate QR Code'}
+                  </button>
+                  <button
+                    onClick={downloadQR}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20"
+                  >
+                    <span className="material-symbols-outlined text-base">download</span>
+                    Download QR Code
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -278,7 +339,7 @@ const EditEmployee = () => {
           <div className="mt-8 flex justify-end gap-4">
             <button
               onClick={() => navigate('/employees')}
-              className="h-12 px-6 bg-gray-100 dark:bg-gray-800 text-[#111318] dark:text-white rounded-lg font-medium hover:bg-gray-200"
+              className="h-12 px-6 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700"
             >
               Cancel
             </button>

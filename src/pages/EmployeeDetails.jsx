@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/ui/Sidebar.jsx';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import api from '../lib/api';
 
 const EmployeeDetails = () => {
   const { id } = useParams(); // Get employee ID from URL
@@ -22,15 +21,13 @@ const EmployeeDetails = () => {
       }
 
       try {
-        const res = await axios.get(`https://smartpass-api.onrender.com/api/employees/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get(`/api/employees/${id}`);
 
         setEmployee(res.data);
         setLoading(false);
       } catch (err) {
         alert('Employee not found or access denied.');
-        navigate('/employees');
+        navigate('/AllEmployees');
       }
     };
 
@@ -68,8 +65,6 @@ const EmployeeDetails = () => {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-
       {/* === MAIN CONTENT === */}
       <main className="flex-1 p-6 lg:p-8">
         <div className="w-full max-w-7xl mx-auto">
@@ -87,7 +82,7 @@ const EmployeeDetails = () => {
           <div className="flex flex-wrap justify-between items-start gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-[#111318] dark:text-white">{employee.fullName}</h1>
-              <p className="text-base text-[#616f89] dark:text-gray-400">{employee.jobTitle || 'Employee'}</p>
+              <p className="text-base text-[#616f89] dark:text-gray-400">{employee.cargo || 'Employee'}</p>
             </div>
             <div className="flex gap-3">
               <button className="h-10 px-4 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -116,7 +111,7 @@ const EmployeeDetails = () => {
                 ></div>
                 <h2 className="text-xl font-bold">{employee.fullName}</h2>
                 <p className="text-sm text-[#616f89] dark:text-gray-400">
-                  {employee.jobTitle}, {employee.department}
+                  {employee.cargo}, {employee.department}
                 </p>
                 <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/40 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-300">
                   <span className="size-2 rounded-full bg-green-500"></span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -34,9 +34,7 @@ const Settings = () => {
       }
 
       try {
-        const res = await axios.get('https://smartpass-api.onrender.com/api/users/me/settings', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/api/users/me/settings');
 
         const data = res.data;
         setSettings({
@@ -77,9 +75,7 @@ const Settings = () => {
   const saveSettings = async (updatedFields = settings) => {
     setSaving(true);
     try {
-      await axios.put('https://smartpass-api.onrender.com/api/users/me/settings', updatedFields, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.put('/api/users/me/settings', updatedFields);
       setMessage({ text: 'Settings saved successfully!', type: 'success' });
     } catch (err) {
       setMessage({ text: 'Failed to save settings.', type: 'error' });
@@ -103,11 +99,9 @@ const Settings = () => {
     }
 
     try {
-      await axios.put('https://smartpass-api.onrender.com/api/auth/change-password', {
+      await api.put('/api/auth/change-password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       setMessage({ text: 'Password changed successfully!', type: 'success' });
@@ -123,47 +117,6 @@ const Settings = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* === SIDEBAR === */}
-      <nav className="flex w-64 flex-col border-r border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark p-4">
-        <div className="flex h-full flex-col justify-between">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 p-2">
-              <span className="material-symbols-outlined text-primary text-3xl">qr_code_scanner</span>
-              <h1 className="text-text-light-primary dark:text-dark-primary text-xl font-bold">SmartPass</h1>
-            </div>
-            <div className="flex flex-col gap-1 pt-4">
-              {/* Other nav items */}
-              <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary">
-                <span className="material-symbols-outlined fill">settings</span>
-                <p className="text-sm font-medium">Settings</p>
-              </a>
-            </div>
-          </div>
-
-          {/* User + Logout */}
-          <div className="flex flex-col gap-1 border-t border-border-light dark:border-border-dark pt-2">
-            <div className="flex items-center gap-3 p-2">
-              <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD0HsjfCIzgacyUP8ze9zPf0j_1U4WBeqSZ1lpN8bj_XHkLE72flKq0eu6BKEVCCENkRRIlK9kKUvQzb76ZzTaPYtF28q7iSIHRZVWVzfOn70e4pP_bC7Ad7q0CMLNQGqKMjGpE6cGUdG1vIJsgfeWrcMWTfKaPvOUHZDOYxsRXjmaaS3aBG8cV5RbaBT6e13X59ZkOlowH_Wi1DQtJgH2Hr8Qlo5vF0y2igDYG0YUj1qeRZyHN-H3kTzKh5qYgF0H7brsA-LhuQuIY')" }}></div>
-              <div>
-                <h2 className="text-text-light-primary dark:text-dark-primary text-sm font-medium">Admin</h2>
-                <p className="text-text-light-secondary dark:text-dark-secondary text-xs">admin@smartpass.com</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('authToken');
-                navigate('/login');
-              }}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-danger/10 text-danger"
-            >
-              <span className="material-symbols-outlined">logout</span>
-              <p className="text-sm font-medium">Log Out</p>
-            </button>
-          </div>
-        </div>
-      </nav>
-
       {/* === MAIN CONTENT === */}
       <main className="flex-1 p-6 sm:p-8 lg:p-12">
         <div className="mx-auto max-w-4xl">

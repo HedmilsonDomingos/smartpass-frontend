@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
-import Sidebar from '../components/ui/Sidebar.jsx';
+import api from '../lib/api';
 
 export default function AddEmployee() {
   const navigate = useNavigate();
@@ -13,15 +13,14 @@ export default function AddEmployee() {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    phoneNumber: "",
-    mobileNumber: "",
-    jobTitle: "",
+    phone: "",
+    cargo: "",
     employeeId: "",
     department: "",
     officeLocation: "",
-    company: "SmartPass Angola",
-    category: "",
-    status: "Active",
+    company: "",
+    status: "",
+    idCardExpirationDate: "",
     photo: "",
   });
 
@@ -83,16 +82,17 @@ export default function AddEmployee() {
       newErrors.email = "Email inválido";
     }
 
-    // Telemóvel angolano - obrigatório começar com 9 e ter 9 dígitos
-    if (form.mobileNumber && !/^9[123456789]\d{7}$/.test(form.mobileNumber.replace(/\s/g, ""))) {
-      newErrors.mobileNumber = "Telemóvel angolano inválido (ex: 923 456 789)";
+
+    // Telefone angolano - obrigatório começar com 9 e ter 9 dígitos
+    if (!form.phone || !/^9[123456789]\d{7}$/.test(form.phone.replace(/\s/g, ""))) {
+      newErrors.phone = "Telefone angolano inválido (ex: 923 456 789)";
     }
 
     // Cargo e departamento obrigatórios
-    if (!form.jobTitle.trim()) newErrors.jobTitle = "Cargo é obrigatório";
+    if (!form.cargo.trim()) newErrors.cargo = "Cargo é obrigatório";
     if (!form.department) newErrors.department = "Departamento é obrigatório";
-    if (!form.category) newErrors.category = "Categoria é obrigatória";
     if (!form.officeLocation) newErrors.officeLocation = "Localização é obrigatória";
+    if (!form.company) newErrors.company = "Empresa é obrigatória";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -110,75 +110,83 @@ export default function AddEmployee() {
 
     try {
       const finalEmployeeId = form.employeeId || "SP" + Date.now().toString().slice(-6);
-      const qrData = `https://smartpass-angola.com/verify/${finalEmployeeId}`;
-      const qrImage = await QRCode.toDataURL(qrData, { 
-        width: 512, 
-        margin: 2,
-        color: { dark: "#135bec", light: "#ffffff" }
-      });
 
+      // Create the employee first (without QR). Backend will return the new record with its _id.
+      const { fullName, employeeId, cargo, phone, ...restOfForm } = form;
       const payload = {
-        ...form,
+        ...restOfForm,
+        cargo: form.cargo,
+        mobile: phone, // Map frontend 'phone' to backend 'mobile'
         employeeId: finalEmployeeId,
-        qrCode: qrImage,
-        name: form.fullName.trim(),
+        name: fullName.trim(),
       };
 
-      const token = localStorage.getItem("token");
-      const res = await fetch("https://smartpass-api.onrender.com/api/employees", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.post("/api/employees", payload);
 
-      if (res.ok) {
+      if (res.status === 200 || res.status === 201) {
+        const created = res.data;
+
+        // Generate a QR that points to the public employee page using the created _id.
+        const qrData = `${window.location.origin}/p/${created._id}`;
+        const qrImage = await QRCode.toDataURL(qrData, {
+          width: 512,
+          margin: 2,
+          color: { dark: "#135bec", light: "#ffffff" }
+        });
+
+        // Update the employee record with the generated QR image
+        try {
+          await api.put(`/api/employees/${created._id}`, { qrCode: qrImage });
+        } catch (err) {
+          // Non-fatal: still continue but inform user
+          console.warn('Failed to save QR to employee record:', err);
+        }
+
         alert(`FUNCIONÁRIO ADICIONADO COM SUCESSO!\n\nNome: ${form.fullName}\nID: ${finalEmployeeId}\nQR Code gerado e salvo!`);
-        navigate("/employees");
+        navigate("/AllEmployees");
       } else {
         const error = await res.text();
         alert("Erro do servidor: " + error);
       }
     } catch (err) {
-      alert("Sem conexão com a nuvem. Verifica a internet.");
+      console.error("API Error during employee creation:", err);
+      const errorMessage = err.response?.data?.message || err.message || "Erro desconhecido ao conectar ao servidor.";
+      alert(`Erro ao salvar funcionário: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-      <Sidebar />
+    <div className="flex h-screen text-white">
 
       {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
             <h1 className="text-4xl font-black text-primary">ADICIONAR FUNCIONÁRIO</h1>
-            <p className="text-subtext-light dark:text-subtext-dark mt-2">Sistema com validação angolana de aço</p>
+            <p className="text-gray-400 mt-2">Sistema com validação angolana de aço</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-container-light dark:bg-container-dark rounded-2xl border border-border-light dark:border-border-dark p-8 space-y-10">
+          <form onSubmit={handleSubmit} className="bg-gray-700 rounded-2xl border border-gray-600 p-8 space-y-10">
 
             {/* PERSONAL INFORMATION */}
             <div>
-              <h3 className="text-xl font-bold pb-4 border-b border-border-light dark:border-border-dark">Informação Pessoal</h3>
+              <h3 className="text-xl font-bold pb-4 border-b border-gray-600">Informação Pessoal</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div>
-                  <input name="fullName" value={form.fullName} onChange={handleChange} required placeholder="Nome completo *" className={`w-full h-14 px-5 rounded-xl border ${errors.fullName ? "border-red-500" : "border-border-light dark:border-border-dark"} bg-background-light dark:bg-background-dark`} />
+                  <input name="fullName" value={form.fullName} onChange={handleChange} required placeholder="Nome completo *" className={`w-full h-14 px-5 rounded-xl border ${errors.fullName ? "border-red-500" : "border-gray-600"} bg-gray-800`} />
                   {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div>
-                  <input name="email" value={form.email} onChange={handleChange} type="email" placeholder="Email (opcional)" className={`w-full h-14 px-5 rounded-xl border ${errors.email ? "border-red-500" : "border-border-light dark:border-border-dark"} bg-background-light dark:bg-background-dark`} />
+                  <input name="email" value={form.email} onChange={handleChange} type="email" placeholder="Email (opcional)" className={`w-full h-14 px-5 rounded-xl border ${errors.email ? "border-red-500" : "border-gray-600"} bg-gray-800`} />
                   {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
 
                 <div>
-                  <input name="mobileNumber" value={form.mobileNumber} onChange={handleChange} placeholder="Telemóvel (+244) *" className={`w-full h-14 px-5 rounded-xl border ${errors.mobileNumber ? "border-red-500" : "border-border-light dark:border-border-dark"} bg-background-light dark:bg-background-dark`} />
-                  {errors.mobileNumber && <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>}
+                  <input name="phone" value={form.phone} onChange={handleChange} placeholder="Telefone (+244) *" className={`w-full h-14 px-5 rounded-xl border ${errors.phone ? "border-red-500" : "border-gray-600"} bg-gray-800`} />
+                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
 
                 <div className="md:col-span-2">
@@ -199,10 +207,10 @@ export default function AddEmployee() {
             {/* PROFESSIONAL DETAILS + STATUS */}
             <div className="grid md:grid-cols-2 gap-10">
               <div>
-                <h3 className="text-xl font-bold pb-4 border-b border-border-light dark:border-border-dark">Dados Profissionais</h3>
+                <h3 className="text-xl font-bold pb-4 border-b border-gray-600">Dados Profissionais</h3>
                 <div className="space-y-6 mt-8">
-                  <input name="jobTitle" value={form.jobTitle} onChange={handleChange} required placeholder="Cargo *" className={`w-full h-14 px-5 rounded-xl border ${errors.jobTitle ? "border-red-500" : "border-border-light"} bg-background-light dark:bg-background-dark`} />
-                  <select name="department" value={form.department} onChange={handleChange} required className={`w-full h-14 px-5 rounded-xl border ${errors.department ? "border-red-500" : "border-border-light"} bg-background-light dark:bg-background-dark`}>
+                  <input name="cargo" value={form.cargo} onChange={handleChange} required placeholder="Cargo *" className={`w-full h-14 px-5 rounded-xl border ${errors.cargo ? "border-red-500" : "border-gray-600"} bg-gray-800`} />
+                  <select name="department" value={form.department} onChange={handleChange} required className={`w-full h-14 px-5 rounded-xl border ${errors.department ? "border-red-500" : "border-gray-600"} bg-gray-800`}>
                     <option value="">Departamento *</option>
                     <option>Direção Geral</option>
                     <option>Recursos Humanos</option>
@@ -211,24 +219,19 @@ export default function AddEmployee() {
                     <option>Financeiro</option>
                     <option>Operações</option>
                   </select>
-                  <select name="category" value={form.category} onChange={handleChange} required className={`w-full h-14 px-5 rounded-xl border ${errors.category ? "border-red-500" : "border-border-light"} bg-background-light dark:bg-background-dark`}>
-                    <option value="">Categoria *</option>
-                    <option>Full-Time</option>
-                    <option>Part-Time</option>
-                    <option>Estagiário</option>
-                    <option>Consultor</option>
-                  </select>
-                  <select name="officeLocation" value={form.officeLocation} onChange={handleChange} required className={`w-full h-14 px-5 rounded-xl border ${errors.officeLocation ? "border-red-500" : "border-border-light"} bg-background-light dark:bg-background-dark`}>
+                  <select name="company" value={form.company} onChange={handleChange} required className={`w-full h-14 px-5 rounded-xl border ${errors.company ? "border-red-500" : "border-gray-600"} bg-gray-800`}>
                     <option value="">Empresa *</option>
                     <option>Gesglobal</option>
                     <option>Rikauto</option>
-                    <option>Abricome</option>                    
+                    <option>Abricome</option>
                   </select>
+                  <input name="officeLocation" value={form.officeLocation} onChange={handleChange} required placeholder="Office Location *" className={`w-full h-14 px-5 rounded-xl border ${errors.officeLocation ? "border-red-500" : "border-gray-600"} bg-gray-800`} />
+                  <input name="idCardExpirationDate" value={form.idCardExpirationDate} onChange={handleChange} type="date" placeholder="Data de Expiração do Cartão ID" className={`w-full h-14 px-5 rounded-xl border border-gray-600 bg-gray-800`} />
                 </div>
               </div>
 
               <div>
-                <h3 className="text-xl font-bold pb-4 border-b border-border-light dark:border-border-dark">Estado da Conta</h3>
+                <h3 className="text-xl font-bold pb-4 border-b border-gray-600">Estado da Conta</h3>
                 <div className="mt-8 flex items-center gap-6">
                   <span className={form.status === "Inactive" ? "text-red-500 font-bold" : "text-gray-500"}>Inativo</span>
                   <button type="button" onClick={toggleStatus} className={`relative inline-flex h-8 w-14 rounded-full transition ${form.status === "Active" ? "bg-primary" : "bg-gray-400"}`}>
@@ -240,7 +243,7 @@ export default function AddEmployee() {
             </div>
 
             {/* BOTÃO FINAL */}
-            <div className="flex justify-end pt-8 border-t border-border-light dark:border-border-dark">
+            <div className="flex justify-end pt-8 border-t border-gray-600">
               <button type="submit" disabled={loading} className="h-16 px-12 bg-primary text-white text-xl font-black rounded-xl hover:bg-primary/90 disabled:opacity-70 flex items-center gap-3 shadow-2xl">
                 <span className="material-symbols-outlined text-3xl">qr_code_scanner</span>
                 {loading ? "A GUARDAR NA NUVEM..." : "SALVAR + GERAR QR CODE"}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/ui/Sidebar.jsx';
+import api from '../lib/api';
 
 const AddUser = () => {
   // === FORM STATE ===
@@ -9,7 +8,8 @@ const AddUser = () => {
     firstName: '',
     lastName: '',
     email: '',
-    jobTitle: '',
+    cargo: '',
+    photo: '',
     role: 'Manager', // Default
     forcePasswordChange: true,
     permissions: {
@@ -46,7 +46,18 @@ const AddUser = () => {
 
   // === HANDLE INPUT CHANGE ===
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked, files } = e.target;
+    if (name === 'photo') {
+      const file = files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormData(prev => ({ ...prev, photo: reader.result }));
+        };
+        reader.readAsDataURL(file);
+      }
+      return;
+    }
     if (type === 'checkbox') {
       if (name.includes('.')) {
         const [parent, child] = name.split('.');
@@ -85,7 +96,7 @@ const AddUser = () => {
       };
 
       // SEND TO YOUR BACKEND
-      await axios.post('https://smartpass-api.onrender.com/api/users', payload); // CHANGE TO YOUR API
+      await api.post('/api/users', payload);
 
       setMessage({ text: 'User added successfully! They can now log in.', type: 'success' });
       setTimeout(() => navigate('/users'), 2000); // Redirect after success
@@ -100,28 +111,24 @@ const AddUser = () => {
   };
 
   return (
-    <div className="flex flex-row h-full">
-      <Sidebar />
-
-      {/* === MAIN CONTENT === */}
-      <main className="flex-1 flex flex-col p-6 lg:p-10">
-        <div className="w-full max-w-7xl mx-auto">
+    <main className="flex-1 flex flex-col p-6 lg:p-10 text-white">
+      <div className="w-full max-w-7xl mx-auto">
           {/* BREADCRUMB */}
           <div className="flex flex-wrap gap-2 mb-4 text-sm">
-            <a href="#" className="text-gray-500">Dashboard</a>
-            <span className="text-gray-500">/</span>
-            <a href="#" className="text-gray-500">Users</a>
-            <span className="text-gray-500">/</span>
-            <span className="text-gray-900 dark:text-white">Add New User</span>
+            <a href="#" className="text-gray-400">Dashboard</a>
+            <span className="text-gray-400">/</span>
+            <a href="#" className="text-gray-400">Users</a>
+            <span className="text-gray-400">/</span>
+            <span className="text-white">Add New User</span>
           </div>
 
           {/* TITLE */}
           <div className="flex flex-wrap justify-between gap-3 mb-8">
             <div className="flex min-w-72 flex-col gap-2">
-              <p className="text-gray-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">
+              <p className="text-white text-3xl font-bold leading-tight tracking-tight">
                 Add New User Account
               </p>
-              <p className="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal">
+              <p className="text-gray-400 text-base font-normal leading-normal">
                 Create a new account with specific roles and permissions.
               </p>
             </div>
@@ -137,31 +144,42 @@ const AddUser = () => {
           )}
 
           {/* FORM */}
-          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 lg:p-8">
+          <form onSubmit={handleSubmit} className="bg-gray-700 border border-gray-600 rounded-xl p-6 lg:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
               {/* === USER DETAILS === */}
               <div className="flex flex-col gap-6">
-                <h2 className="text-gray-900 dark:text-white text-xl font-bold">User Details</h2>
+                <h2 className="text-white text-xl font-bold">User Details</h2>
+
+                <label className="flex flex-col w-full">
+                  <p className="text-white text-sm font-medium pb-2">Photo</p>
+                  <input
+                    name="photo"
+                    type="file"
+                    onChange={handleChange}
+                    className="form-input h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base"
+                    accept="image/*"
+                  />
+                </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col w-full">
-                    <p className="text-gray-900 dark:text-white text-sm font-medium pb-2">First Name</p>
+                    <p className="text-white text-sm font-medium pb-2">First Name</p>
                     <input
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="form-input h-12 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-base"
+                      className="form-input h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base"
                       placeholder="Enter first name"
                       required
                     />
                   </label>
                   <label className="flex flex-col w-full">
-                    <p className="text-gray-900 dark:text-white text-sm font-medium pb-2">Last Name</p>
+                    <p className="text-white text-sm font-medium pb-2">Last Name</p>
                     <input
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="form-input h-12 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-base"
+                      className="form-input h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base"
                       placeholder="Enter last name"
                       required
                     />
@@ -169,44 +187,44 @@ const AddUser = () => {
                 </div>
 
                 <label className="flex flex-col w-full">
-                  <p className="text-gray-900 dark:text-white text-sm font-medium pb-2">Email Address</p>
+                  <p className="text-white text-sm font-medium pb-2">Email Address</p>
                   <input
                     name="email"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="form-input h-12 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-base"
+                    className="form-input h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base"
                     placeholder="user@example.com"
                     required
                   />
                 </label>
 
                 <label className="flex flex-col w-full">
-                  <p className="text-gray-900 dark:text-white text-sm font-medium pb-2">Job Title</p>
+                  <p className="text-white text-sm font-medium pb-2">Cargo</p>
                   <input
-                    name="jobTitle"
-                    value={formData.jobTitle}
+                    name="cargo"
+                    value={formData.cargo}
                     onChange={handleChange}
-                    className="form-input h-12 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-base"
+                    className="form-input h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base"
                     placeholder="e.g. HR Manager"
                   />
                 </label>
 
                 {/* TEMP PASSWORD */}
                 <div className="flex flex-col w-full">
-                  <p className="text-gray-900 dark:text-white text-sm font-medium pb-2">Temporary Password</p>
+                  <p className="text-white text-sm font-medium pb-2">Temporary Password</p>
                   <div className="relative flex items-center">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={tempPassword}
                       readOnly
-                      className="form-input h-12 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-base pr-32"
+                      className="form-input h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base pr-32"
                     />
                     <div className="absolute right-3 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="text-gray-500 hover:text-gray-800"
+                        className="text-gray-400 hover:text-white"
                       >
                         <span className="material-symbols-outlined text-xl">
                           {showPassword ? 'visibility' : 'visibility_off'}
@@ -240,15 +258,15 @@ const AddUser = () => {
 
               {/* === ROLES & PERMISSIONS === */}
               <div className="flex flex-col gap-6">
-                <h2 className="text-gray-900 dark:text-white text-xl font-bold">Roles and Permissions</h2>
+                <h2 className="text-white text-xl font-bold">Roles and Permissions</h2>
 
                 <label className="flex flex-col w-full">
-                  <p className="text-gray-900 dark:text-white text-sm font-medium pb-2">User Role</p>
+                  <p className="text-white text-sm font-medium pb-2">User Role</p>
                   <select
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="form-select h-12 px-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-base"
+                    className="form-select h-12 px-3 rounded-lg border border-gray-600 bg-gray-800 text-base"
                   >
                     <option>Administrator</option>
                     <option>Manager</option>
@@ -262,8 +280,8 @@ const AddUser = () => {
                   </h3>
 
                   {/* Employee Data */}
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                    <h4 className="text-gray-900 dark:text-white font-semibold mb-3">Employee Data</h4>
+                  <div className="border border-gray-600 rounded-lg p-4">
+                    <h4 className="text-white font-semibold mb-3">Employee Data</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                       {['addEmployees', 'editEmployees', 'deactivateEmployees', 'viewEmployees'].map(perm => (
                         <label key={perm} className="flex items-center gap-3">
@@ -275,7 +293,7 @@ const AddUser = () => {
                             className="form-checkbox h-5 w-5 rounded text-primary"
                             disabled={perm === 'manageUsers'} // Example lock
                           />
-                          <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                          <span className="text-gray-300 text-sm font-medium">
                             {perm.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                           </span>
                         </label>
@@ -284,8 +302,8 @@ const AddUser = () => {
                   </div>
 
                   {/* QR Code Management */}
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                    <h4 className="text-gray-900 dark:text-white font-semibold mb-3">QR Code Management</h4>
+                  <div className="border border-gray-600 rounded-lg p-4">
+                    <h4 className="text-white font-semibold mb-3">QR Code Management</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                       {['generateQRCodes', 'revokeQRCodes'].map(perm => (
                         <label key={perm} className="flex items-center gap-3">
@@ -296,7 +314,7 @@ const AddUser = () => {
                             onChange={handleChange}
                             className="form-checkbox h-5 w-5 rounded text-primary"
                           />
-                          <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                          <span className="text-gray-300 text-sm font-medium">
                             {perm.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                           </span>
                         </label>
@@ -305,8 +323,8 @@ const AddUser = () => {
                   </div>
 
                   {/* System Admin */}
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                    <h4 className="text-gray-900 dark:text-white font-semibold mb-3">System Administration</h4>
+                  <div className="border border-gray-600 rounded-lg p-4">
+                    <h4 className="text-white font-semibold mb-3">System Administration</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                       <label className="flex items-center gap-3">
                         <input
@@ -317,7 +335,7 @@ const AddUser = () => {
                           className="form-checkbox h-5 w-5 rounded text-primary"
                           disabled
                         />
-                        <span className="text-gray-400 dark:text-gray-500 text-sm font-medium">
+                        <span className="text-gray-500 text-sm font-medium">
                           Manage User Accounts
                         </span>
                       </label>
@@ -328,11 +346,11 @@ const AddUser = () => {
             </div>
 
             {/* === ACTION BUTTONS === */}
-            <div className="flex justify-end gap-3 mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
+            <div className="flex justify-end gap-3 mt-8 border-t border-gray-600 pt-6">
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="px-5 h-12 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="px-5 h-12 rounded-lg border border-gray-600 bg-gray-800 text-gray-300 font-semibold hover:bg-gray-700"
               >
                 Cancel
               </button>
@@ -346,8 +364,7 @@ const AddUser = () => {
             </div>
           </form>
         </div>
-      </main>
-    </div>
+    </main>
   );
 };
 

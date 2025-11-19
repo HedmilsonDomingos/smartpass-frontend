@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function AdminLogin() {
   // Estados para controlar os campos do formulário
-  const [username, setUsername] = useState("");     // Guarda o usuário digitado
+  const [email, setEmail] = useState("");     // Guarda o email digitado
   const [password, setPassword] = useState("");     // Guarda a senha digitada
   const [loading, setLoading] = useState(false);    // Mostra "carregando" no botão
   const [showPassword, setShowPassword] = useState(false); // Alterna visibilidade da senha
@@ -20,20 +20,22 @@ export default function AdminLogin() {
     setLoading(true);             // Ativa o estado de carregamento
 
     try {
-      // ENVIA OS DADOS PARA O BACKEND REAL NA NUVEM
-      const response = await fetch("https://smartpass-api.onrender.com/api/auth/login", {
+      // ENVIA OS DADOS PARA O BACKEND LOCAL
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json", // Estamos enviando JSON
         },
-        body: JSON.stringify({ username, password }), // Converte os dados para JSON
+        body: JSON.stringify({ email, password }), // Converte os dados para JSON
       });
 
       const data = await response.json(); // Recebe a resposta do servidor
 
       if (response.ok) {
         // SUCESSO: login correto
-        localStorage.setItem("token", data.token); // Guarda o token real no navegador
+        // Store token under 'authToken' to match other pages' expectations
+        localStorage.setItem("authToken", data.token);
         alert("Bem-vindo ao SmartPass Angola! Acesso autorizado.");
         navigate("/dashboard"); // Redireciona para o painel admin
       } else {
@@ -92,17 +94,17 @@ export default function AdminLogin() {
                   {/* Formulário */}
                   <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-                    {/* Campo Usuário */}
+                    {/* Campo Email */}
                     <label className="flex flex-col w-full">
                       <p className="text-text-light dark:text-text-dark text-sm font-medium leading-normal pb-2">
-                        Usuário
+                        Email
                       </p>
                       <input
-                        type="text"
-                        placeholder="Enter your username"
-                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 text-base font-normal leading-normal"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        type="email"
+                        placeholder="Enter your email"
+                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 text-base font-normal leading-normal"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </label>
@@ -116,7 +118,7 @@ export default function AdminLogin() {
                         <input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-l-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 pr-2 border-r-0 text-base font-normal leading-normal"
+                          className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-l-lg text-text-light dark:text-text-dark focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white h-12 placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 pr-2 border-r-0 text-base font-normal leading-normal"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
@@ -124,7 +126,7 @@ export default function AdminLogin() {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="text-gray-500 dark:text-gray-400 flex border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 items-center justify-center px-4 rounded-r-lg border-l-0 hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+                          className="text-gray-500 dark:text-gray-400 flex border border-gray-300 dark:border-gray-600 bg-white items-center justify-center px-4 rounded-r-lg border-l-0 hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                         >
                           <span className="material-symbols-outlined">
                             {showPassword ? "visibility_off" : "visibility"}

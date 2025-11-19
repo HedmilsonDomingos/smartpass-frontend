@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { format } from 'date-fns';
-import Sidebar from '../components/ui/Sidebar.jsx';
+import api from '../lib/api.js';
 
 const RecentActivityLog = () => {
-  const token = localStorage.getItem('authToken');
-
   // === STATE ===
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [actionFilter, setActionFilter] = useState('All');
-  const [dateFilter, setDateFilter] = useState('Last 30 Days');
+  const [dateFilter, setDateFilter] = useState('All Time');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -21,8 +18,7 @@ const RecentActivityLog = () => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const res = await axios.get('https://smartpass-api.onrender.com/api/activity', {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await api.get('/api/activity', {
           params: {
             page,
             limit,
@@ -41,14 +37,13 @@ const RecentActivityLog = () => {
       }
     };
 
-    if (token) fetchLogs();
-  }, [token, page, search, actionFilter, dateFilter]);
+    fetchLogs();
+  }, [page, search, actionFilter, dateFilter]);
 
   // === EXPORT LOGS TO CSV ===
   const exportLogs = async () => {
     try {
-      const res = await axios.get('https://smartpass-api.onrender.com/api/activity/export', {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await api.get('/api/activity/export', {
         responseType: 'blob',
       });
 
@@ -76,12 +71,8 @@ const RecentActivityLog = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-
-      {/* === MAIN CONTENT === */}
-      <main className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
+    <main className="flex-1 p-8">
+      <div className="max-w-7xl mx-auto">
 
           {/* Header */}
           <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
@@ -203,7 +194,6 @@ const RecentActivityLog = () => {
           </div>
         </div>
       </main>
-    </div>
   );
 };
 

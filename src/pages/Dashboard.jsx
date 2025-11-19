@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Sidebar from "../components/ui/Sidebar.jsx";
+import api from "../lib/api";
 
 export default function Dashboard() {
     // ESTADOS PARA GUARDAR DADOS REAIS DA BASE DE DADOS
@@ -27,21 +27,19 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("authToken");
         if (!token) {
           navigate("/login");
           return;
         }
 
-        const res = await fetch("https://smartpass-api.onrender.com/api/employees", {
-          headers: { "Authorization": `Bearer ${token}` },
-        });
+        const res = await api.get("/api/employees?limit=0");
 
-        if (res.ok) {
-          const employees = await res.json();
+        if (res.status === 200) {
+          const employees = res.data.employees;
 
           const total = employees.length;
-          const active = employees.filter(e => e.status === "Active").length;
+          const active = employees.filter(e => e.status === "Active" || e.status === "active").length;
           const withQr = employees.filter(e => e.qrCode).length;
 
           const recent = employees
@@ -62,7 +60,10 @@ export default function Dashboard() {
           });
         }
       } catch (err) {
-        console.error("Erro:", err);
+        console.error("Dashboard fetch error:", err);
+        if (err.response?.status === 401) {
+          navigate("/login");
+        }
       } finally {
         setLoading(false);
       }
@@ -72,19 +73,17 @@ export default function Dashboard() {
   }, [navigate]);
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-['Inter']">
+    <div className="relative flex min-h-screen w-full flex-col font-['Inter']">
       <div className="flex h-full flex-1">
-         <Sidebar />
-
         {/* MAIN CONTENT */}
         <main className="flex flex-1 flex-col">
-          <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark/50 px-8">
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-600 bg-gray-700 px-8">
             <div className="text-2xl font-bold text-primary">SmartPass Angola</div>
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB9sz9sFiriGBV-t7cVHX3_l4l6MBchNlRwGxlyxTaL5yxGKOU_nOQZXaXWDqd9o8UNrkO_i-E95vqVVEVPtsZ_YgVchf6J8zvQlf4oGhQqp_ZwwApAU6Vdv-c4hH5OBClybMUMRmw7CuSpx1xCxU0TOP8HY_HBE6gp8DAc-DiNmrcSUGw1GBuVZvYd6wuDoXEEuEOHM0c84iMLy5QQV9yfjjw2FCpGY6exH1-s7xLVDH_X9q7-iUgLulLtrOJyI3omKfDmNklQas9S')" }}></div>
               <div>
-                <p className="font-semibold text-gray-800 dark:text-gray-200">Administrator</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">admin@smartpass.ao</p>
+                <p className="font-semibold text-gray-200">Administrator</p>
+                <p className="text-sm text-gray-400">admin@smartpass.ao</p>
               </div>
             </div>
           </header>
@@ -94,8 +93,8 @@ export default function Dashboard() {
 
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-3xl font-bold tracking-tight text-[#111318] dark:text-white">Admin Dashboard</p>
-                  <p className="text-base text-[#616f89] dark:text-gray-400">Bem-vindo de volta, chefe. Aqui está o resumo de hoje.</p>
+                  <p className="text-3xl font-bold tracking-tight text-white">Admin Dashboard</p>
+                  <p className="text-base text-gray-400">Bem-vindo de volta, chefe. Aqui está o resumo de hoje.</p>
                 </div>
                 <button onClick={() => navigate("/AddEmployee")} className="flex items-center gap-2 h-10 px-6 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition">
                   <span className="material-symbols-outlined">add</span>
@@ -109,38 +108,38 @@ export default function Dashboard() {
                 <>
                   {/* CARDS */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="rounded-xl bg-white dark:bg-background-dark/50 border border-gray-200 dark:border-gray-800 p-6">
-                      <p className="text-base font-medium text-[#111318] dark:text-gray-300">Total de Funcionários</p>
-                      <p className="text-4xl font-bold text-[#111318] dark:text-white mt-2">{stats.totalEmployees}</p>
-                      <p className="text-sm text-green-600 mt-1">+12% este mês</p>
+                    <div className="rounded-xl bg-gray-700 border border-gray-600 p-6">
+                      <p className="text-base font-medium text-gray-300">Total de Funcionários</p>
+                      <p className="text-4xl font-bold text-white mt-2">{stats.totalEmployees}</p>
+                      <p className="text-sm text-green-400 mt-1">+12% este mês</p>
                     </div>
-                    <div className="rounded-xl bg-white dark:bg-background-dark/50 border border-gray-200 dark:border-gray-800 p-6">
-                      <p className="text-base font-medium text-[#111318] dark:text-gray-300">Funcionários Ativos</p>
-                      <p className="text-4xl font-bold text-[#111318] dark:text-white mt-2">{stats.activeEmployees}</p>
-                      <p className="text-sm text-green-600 mt-1">+8% este mês</p>
+                    <div className="rounded-xl bg-gray-700 border border-gray-600 p-6">
+                      <p className="text-base font-medium text-gray-300">Funcionários Ativos</p>
+                      <p className="text-4xl font-bold text-white mt-2">{stats.activeEmployees}</p>
+                      <p className="text-sm text-green-400 mt-1">+8% este mês</p>
                     </div>
-                    <div className="rounded-xl bg-white dark:bg-background-dark/50 border border-gray-200 dark:border-gray-800 p-6">
-                      <p className="text-base font-medium text-[#111318] dark:text-gray-300">QR Codes Gerados</p>
-                      <p className="text-4xl font-bold text-[#111318] dark:text-white mt-2">{stats.qrGenerated}</p>
-                      <p className="text-sm text-green-600 mt-1">+25% este mês</p>
+                    <div className="rounded-xl bg-gray-700 border border-gray-600 p-6">
+                      <p className="text-base font-medium text-gray-300">QR Codes Gerados</p>
+                      <p className="text-4xl font-bold text-white mt-2">{stats.qrGenerated}</p>
+                      <p className="text-sm text-green-400 mt-1">+25% este mês</p>
                     </div>
                   </div>
 
                   {/* ATIVIDADE RECENTE */}
-                  <div className="rounded-xl bg-white dark:bg-background-dark/50 border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
-                      <h3 className="text-lg font-semibold text-[#111318] dark:text-white">Atividade Recente</h3>
-                      <a href="/employees" className="text-sm font-medium text-primary hover:underline">Ver todos</a>
+                  <div className="rounded-xl bg-gray-700 border border-gray-600 overflow-hidden">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-600">
+                      <h3 className="text-lg font-semibold text-white">Atividade Recente</h3>
+                      <Link to="/AllEmployees" className="text-sm font-medium text-primary hover:underline">Ver todos</Link>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <tbody>
                           {stats.recentActivity.map((act, i) => (
-                            <tr key={i} className="border-b border-gray-200 dark:border-gray-800 last:border-0">
+                            <tr key={i} className="border-b border-gray-600 last:border-0">
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                   <div className="size-9 rounded-full bg-cover bg-center" style={{ backgroundImage: `url(${act.photo})` }}></div>
-                                  <p className="font-medium text-gray-800 dark:text-gray-200">{act.name}</p>
+                                  <p className="font-medium text-gray-200">{act.name}</p>
                                 </div>
                               </td>
                               <td className="px-6 py-4">
